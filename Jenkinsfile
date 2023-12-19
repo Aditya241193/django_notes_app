@@ -1,34 +1,33 @@
-pipeline {
-    agent any 
-    
+pipeline{
+    agent any
     stages{
-        stage("Clone Code"){
-            steps {
-                echo "Cloning the code"
-                git url:"https://github.com/LondheShubham153/django-notes-app.git", branch: "main"
+        stage('Code'){
+            steps{
+                git url: "https://github.com/Aditya241193/django_notes_app.git", branch: "main"
+                sh "echo 'code pulling from github'"
             }
         }
-        stage("Build"){
-            steps {
-                echo "Building the image"
-                sh "docker build -t my-note-app ."
+        stage('Build'){
+            steps{
+                sh "docker build -t django-app:latest ."
+                sh "echo 'code Building'"
             }
         }
-        stage("Push to Docker Hub"){
-            steps {
-                echo "Pushing the image to docker hub"
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                sh "docker tag my-note-app ${env.dockerHubUser}/my-note-app:latest"
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker push ${env.dockerHubUser}/my-note-app:latest"
+        stage('push'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: "dockerHUB" , passwordVariable: "DockerPass", usernameVariable: "DockerUser")])
+                {
+                sh "docker login -u ${env.DockerUser} -p ${env.DockerPass}"
+                sh "echo 'image pushing to docker hub'"
+                sh "docker tag django-app:latest ${env.DockerUser}/django-app:latest"
+                sh "docker push ${env.DockerUser}/django-app:latest"
                 }
             }
         }
-        stage("Deploy"){
-            steps {
-                echo "Deploying the container"
+        stage('deploy'){
+            steps{
+                sh "echo 'Deploying app on ec2 server'"
                 sh "docker-compose down && docker-compose up -d"
-                
             }
         }
     }
